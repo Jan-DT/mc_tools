@@ -48,7 +48,6 @@ class Subdivision1D:
                     _valid_intervals.append((_posts, _interval))
             except ValueError:
                 pass
-
         return _valid_intervals
 
 
@@ -69,31 +68,32 @@ def run():
     print("└" + "─" * 41 + "┘\n")
 
     try:
-        pos_a: int = int(input("Enter the starting position\n> "))
-        pos_b: int = int(input("Enter the ending position\n> "))
-        post_width: int = int(input("Enter the width of the posts (defaults to 1)\n> ") or 1)
+        uinput: list[str] = input("Enter the start and end coordinates, and width of the posts, like 20 50 2.\n"
+                                  "You can also calculate multiple post widths, like 20 50 1 2 3\n> ").split(' ')
+        if len(uinput) < 2: raise ValueError("Not enough arguments given")
+        pos_a, pos_b = int(uinput.pop(0)), int(uinput.pop(0))
+        post_widths: list[int] = list(map(int, uinput)) or [1]
 
-        sub = Subdivision1D(pos_a, pos_b, post_width)
-        print(f"Calculating the intervals between {pos_a} and {pos_b} ({sub.distance()} blocks)" +
-              (f" with a post width of {post_width}..." if post_width != 1 else "..."))
+        print(f"Calculating the intervals between {pos_a} and {pos_b} ({Subdivision1D.calculate_distance(pos_a, pos_b)} blocks)" + (
+                f" with a post width of {post_widths[0]}..." if len(post_widths) <= 1 else
+                f" with post widths: {', '.join(map(str, post_widths))}..."))
 
-        intervals = sub.calculate()
-        if not intervals:
-            print(f"No solutions found for the given positions")
-            return
-
-        print(f"Found {len(intervals)} solutions:")
-        for posts, interval in intervals:
-            msg = f"* Posts: {posts} - Gaps: {posts - 1} - Blocks between: {int(interval)}"
-            print(msg + max(3, 50 - len(msg)) * " " + visualize_subdivision(posts, post_width, int(interval)))
+        for post_width in post_widths:
+            sub = Subdivision1D(pos_a, pos_b, post_width)
+            intervals = sub.calculate()
+            if intervals:
+                print(f"Found {len(intervals)} solutions for post width {post_width}:")
+                for posts, interval in intervals:
+                    msg = f"* Posts: {posts} - Gaps: {posts - 1} - Blocks between: {int(interval)}"
+                    print(msg + max(3, 50 - len(msg)) * " " + visualize_subdivision(posts, post_width, int(interval)))
+            else:
+                print(f"No solutions found for post width {post_width}...")
 
     except ValueError as e:
         print(f"Invalid situation: {e}")
-        return
 
 
 if __name__ == "__main__":
     while True:
         run()
-        if input("\nPress 'enter' to continue, or type 'quit' to quit.").lower() in ("quit", "exit", "q"):
-            break
+        if input("\nPress 'enter' to continue, or type 'quit' to quit.").lower() in ("quit", "exit", "q"): break
